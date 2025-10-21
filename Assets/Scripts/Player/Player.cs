@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Animations;
 
@@ -19,6 +20,16 @@ public class Player : MonoBehaviour
     [SerializeField] private Vector2 groundSensorSize;
     [SerializeField] private LayerMask GroundLayer;
     [SerializeField] private Color32 sensorColor;
+
+    [Header("Power Up Settings")]
+    [SerializeField] private float timedPowerUpMaxTime;
+    private float currentSugarTime;
+    private float currentBeerTime;
+
+    [Header("Soda Boost Settings")]
+    private bool isCarryingSoda;
+    [SerializeField] private float boostForce;
+    private float currentBoostForce;
 
     private SpriteRenderer sr;
     private Rigidbody2D rb;
@@ -46,25 +57,20 @@ public class Player : MonoBehaviour
     {
         OnMove();
         OnJump();
+        OnDash();
     }
 
     private void PlayerInputs()
     {
         movement = Input.GetAxisRaw("Horizontal") * (!isSlowed ? currentSpeed : currentSpeed / slowDivider);
 
-        if (Input.GetButtonDown("Jump") && OnGround())
+        if (Input.GetKeyDown(KeyCode.KeypadEnter))
         {
-            pam.Jump();
-            currentJumpTime = maxJumpTime;
+            isCarryingSoda = true;
         }
-        else if (Input.GetButton("Jump") && currentJumpTime > 0)
-        {
-            currentJumpTime -= Time.deltaTime;
-        }
-        else
-        {
-            currentJumpTime = 0;
-        }
+
+        Jump();
+        Dash();
     }
 
     private void OnMove()
@@ -84,6 +90,46 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void Dash()
+    {
+        if (Input.GetButtonDown("Fire3") && isCarryingSoda)
+        {
+            currentBoostForce = boostForce;
+            isCarryingSoda = false;
+            currentBoostForce = 0;
+        }
+    }
+
+    private void OnDash()
+    {
+        if (isCarryingSoda)
+        {
+            Vector2 boostDirection = (transform.rotation.y == 0 ? Vector2.right : Vector2.left) * boostForce;
+            rb.AddForce(boostDirection, ForceMode2D.Impulse);
+        }
+    }
+
+    private void Jump()
+    {
+        if (Input.GetButtonDown("Jump") && OnGround())
+        {
+            pam.Jump();
+            currentJumpTime = maxJumpTime;
+        }
+        else if (Input.GetButtonDown("Jump") && isCarryingSoda)
+        {
+            currentJumpTime = maxJumpTime;
+            isCarryingSoda = false;
+        }
+        else if (Input.GetButton("Jump") && currentJumpTime > 0)
+        {
+            currentJumpTime -= Time.deltaTime;
+        }
+        else
+        {
+            currentJumpTime = 0;
+        }
+    }
     private void OnJump()
     {
         if (currentJumpTime > 0)
@@ -117,11 +163,59 @@ public class Player : MonoBehaviour
         return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, GroundLayer);
     }
 
+    private IEnumerator ActivateBeer()
+    {
+        if (currentBeerTime == 0)
+        {
+            currentBeerTime = timedPowerUpMaxTime;
+
+            Time.timeScale = 0.3f;
+
+            while (currentBeerTime > 0)
+            {
+                currentBeerTime--;
+                yield return new WaitForSecondsRealtime(1.0f);
+            }
+
+            Time.timeScale = 1.0f;
+        }
+    }
+
+    private IEnumerator ActivateSugar()
+    {
+        if (currentSugarTime == 0)
+        {
+            currentSugarTime = timedPowerUpMaxTime;
+
+            currentSpeed = baseSpeed * 2;
+
+            while (currentSugarTime > 0)
+            {
+                currentSugarTime--;
+                yield return new WaitForSecondsRealtime(1.0f);
+            }
+
+            currentSpeed = baseSpeed;
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("SewerWater"))
         {
             isSlowed = true;
+        } 
+        else if (collision.CompareTag("BeerPowerUp"))
+        {
+            StartCoroutine(ActivateBeer());
+
+            collision.gameObject.SetActive(false);
+        }
+        else if (collision.CompareTag("SugarPowerUp"))
+        {
+            StartCoroutine(ActivateSugar());
+
+            collision.gameObject.SetActive(false);
         }
     }
 

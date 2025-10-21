@@ -7,6 +7,9 @@ TagManager:
   - Ground
   - SensorGround
   - SewerWater
+  - PowerUpPool
+  - BeerPowerUp
+  - SugarPowerUp
   layers:
   - Default
   - TransparentFX
