@@ -92,6 +92,11 @@ public class Player : MonoBehaviour
         }
     }
 
+    public float GetCurrentSpeed()
+    {
+        return currentSpeed;
+    }
+
     public float GetMovement()
     {
         return movement;
