@@ -14,6 +14,15 @@ public class PlayerAnimatorManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (player.GetCurrentSpeed() > player.GetBaseSpeed())
+        {
+            anim.speed = 1.0f * player.GetSugarMultiplier();
+        }
+        else
+        {
+            anim.speed = 1.0f;
+        }
+
         anim.SetInteger("pMove", (int)player.GetMovement());
         anim.SetBool("pGround", player.OnGround());
         anim.SetFloat("pAirSpeed", player.GetAirSpeed());

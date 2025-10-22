@@ -36,6 +36,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8589818540409346070}
+  - {fileID: 2029508360666880171}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2467096612832010266
@@ -214,7 +215,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseSpeed: 8
   slowDivider: 4
-  jumpForce: 4.5
+  jumpForce: 5.5
   maxJumpTime: 0.4
   groundSensor: {fileID: 8589818540409346070}
   groundSensorSize: {x: 0.81, y: 0.04}
@@ -224,9 +225,43 @@ MonoBehaviour:
   sensorColor:
     serializedVersion: 2
     rgba: 4278208959
-  timedPowerUpMaxTime: 10
+  timedPowerUpMaxTime: 7
+  sugarSpeedMultiplier: 2
+  beerTimeScale: 0.2
+  sodaSplashPosition: {fileID: 2029508360666880171}
   boostForce: 20
   boostDuration: 0.2
+--- !u!1 &2672125867688544293
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2029508360666880171}
+  m_Layer: 0
+  m_Name: SodaBoostPosition
+  m_TagString: Untagged
+  m_Icon: {fileID: 7148428337604731935, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2029508360666880171
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2672125867688544293}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.25, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9052057651693994752}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4699600629976567539
 GameObject:
   m_ObjectHideFlags: 0

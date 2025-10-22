@@ -11,6 +11,8 @@ TagManager:
   - BeerPowerUp
   - SugarPowerUp
   - SodaPowerUp
+  - VFXPoolManager
+  - ItemDisplay
   layers:
   - Default
   - TransparentFX

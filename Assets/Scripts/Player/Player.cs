@@ -12,7 +12,6 @@ public class Player : MonoBehaviour
     [SerializeField] private float jumpForce;
     [SerializeField] private float maxJumpTime;
     private float currentJumpTime;
-
     private bool isSlowed;
 
     [Header("Sensor Ground Settings")]
@@ -23,10 +22,14 @@ public class Player : MonoBehaviour
 
     [Header("Power Up Settings")]
     [SerializeField] private float timedPowerUpMaxTime;
+    [SerializeField] private float sugarSpeedMultiplier;
+    [Range(0.0f, 1.0f)][SerializeField] private float beerTimeScale;
     private float currentSugarTime;
     private float currentBeerTime;
+    private string currentItem;
 
     [Header("Soda Boost Settings")]
+    [SerializeField] private Transform sodaSplashPosition;
     private bool isCarryingSoda;
     [SerializeField] private float boostForce;
     [SerializeField] private float boostDuration;
@@ -36,6 +39,8 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private Collider2D col;
     private PlayerAnimatorManager pam;
+    private VFXPool vfxpool;
+    private ItemDisplay itemDisplay;
 
     void Start()
     {
@@ -43,6 +48,8 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
         pam = GetComponent<PlayerAnimatorManager>();
+        vfxpool = GameObject.FindGameObjectWithTag("VFXPoolManager").GetComponent<VFXPool>();
+        itemDisplay = GameObject.FindGameObjectWithTag("ItemDisplay").GetComponent<ItemDisplay>();
 
         currentSpeed = baseSpeed;
     }
@@ -61,6 +68,7 @@ public class Player : MonoBehaviour
         OnDash();
     }
 
+    #region Player Controls
     private void PlayerInputs()
     {
         if (isDashing) return;
@@ -69,6 +77,7 @@ public class Player : MonoBehaviour
 
         Jump();
         Dash();
+        UseItem();
     }
 
     private void OnMove()
@@ -88,13 +97,17 @@ public class Player : MonoBehaviour
         }
     }
 
+    #region Dash
+
     private void Dash()
     {
         if (isCarryingSoda && Input.GetButtonDown("Fire3"))
         {
             isCarryingSoda = false;
+            SpawnSodaSplash(sodaSplashPosition);
+            rb.gravityScale = 0;
             isDashing = true;
-            rb.linearVelocity = new(0, rb.linearVelocityY);
+            rb.linearVelocity = new(0, 0);
         }
     }
 
@@ -111,9 +124,13 @@ public class Player : MonoBehaviour
     private IEnumerator DashTime(float duration)
     {
         yield return new WaitForSeconds(duration);
+        rb.gravityScale = 1;
         isDashing = false;
     }
 
+    #endregion
+
+    #region Jump
     private void Jump()
     {
         if (Input.GetButtonDown("Jump") && OnGround())
@@ -125,6 +142,7 @@ public class Player : MonoBehaviour
         {
             currentJumpTime = maxJumpTime;
             isCarryingSoda = false;
+            SpawnSodaSplash(180);
         }
         else if (Input.GetButton("Jump") && currentJumpTime > 0)
         {
@@ -143,9 +161,48 @@ public class Player : MonoBehaviour
         }
     }
 
+    #endregion
+
+    private void UseItem()
+    {
+        if (Input.GetKeyDown(KeyCode.F) && currentItem != null)
+        {
+            switch (currentItem)
+            {
+                case "Beer":
+                    StartCoroutine(ActivateBeer());
+                    break;
+                case "Sugar":
+                    StartCoroutine(ActivateSugar());
+                    break;
+                case "Soda":
+                    isCarryingSoda = true;
+                    break;
+                default:
+                    break;
+            }
+
+            currentItem = itemDisplay.ClearItem();
+        }
+    }
+
+    #endregion
+
+    #region Getters
+    
+    public float GetBaseSpeed()
+    {
+        return baseSpeed;
+    }
+
     public float GetCurrentSpeed()
     {
         return currentSpeed;
+    }
+
+    public float GetSugarMultiplier()
+    {
+        return sugarSpeedMultiplier;
     }
 
     public float GetMovement()
@@ -168,13 +225,16 @@ public class Player : MonoBehaviour
         return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, GroundLayer);
     }
 
+    #endregion
+
+    #region Power-Ups
     private IEnumerator ActivateBeer()
     {
         if (currentBeerTime == 0)
         {
             currentBeerTime = timedPowerUpMaxTime;
 
-            Time.timeScale = 0.3f;
+            Time.timeScale = beerTimeScale;
 
             while (currentBeerTime > 0)
             {
@@ -192,7 +252,7 @@ public class Player : MonoBehaviour
         {
             currentSugarTime = timedPowerUpMaxTime;
 
-            currentSpeed = baseSpeed * 2;
+            currentSpeed = baseSpeed * sugarSpeedMultiplier;
 
             while (currentSugarTime > 0)
             {
@@ -204,6 +264,18 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void SpawnSodaSplash(float rotation)
+    {
+        vfxpool.GetPooledSodaSplash(sodaSplashPosition.position, rotation);
+    }
+
+    private void SpawnSodaSplash(Transform parent)
+    {
+        vfxpool.GetPooledSodaSplash(parent);
+    }
+
+    #endregion
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("SewerWater"))
@@ -212,19 +284,19 @@ public class Player : MonoBehaviour
         } 
         else if (collision.CompareTag("BeerPowerUp"))
         {
-            StartCoroutine(ActivateBeer());
+            currentItem = itemDisplay.DisplayItem("Beer");
 
             collision.gameObject.SetActive(false);
         }
         else if (collision.CompareTag("SugarPowerUp"))
         {
-            StartCoroutine(ActivateSugar());
+            currentItem = itemDisplay.DisplayItem("Sugar");
 
             collision.gameObject.SetActive(false);
         }
         else if (collision.CompareTag("SodaPowerUp"))
         {
-            isCarryingSoda = true;
+            currentItem = itemDisplay.DisplayItem("Soda");
 
             collision.gameObject.SetActive(false);
         }
