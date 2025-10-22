@@ -224,7 +224,9 @@ MonoBehaviour:
   sensorColor:
     serializedVersion: 2
     rgba: 4278208959
-  timedPowerUpMaxTime: 5
+  timedPowerUpMaxTime: 10
+  boostForce: 20
+  boostDuration: 0.2
 --- !u!1 &4699600629976567539
 GameObject:
   m_ObjectHideFlags: 0

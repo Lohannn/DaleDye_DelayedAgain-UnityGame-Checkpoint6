@@ -29,7 +29,8 @@ public class Player : MonoBehaviour
     [Header("Soda Boost Settings")]
     private bool isCarryingSoda;
     [SerializeField] private float boostForce;
-    private float currentBoostForce;
+    [SerializeField] private float boostDuration;
+    private bool isDashing;
 
     private SpriteRenderer sr;
     private Rigidbody2D rb;
@@ -62,12 +63,9 @@ public class Player : MonoBehaviour
 
     private void PlayerInputs()
     {
-        movement = Input.GetAxisRaw("Horizontal") * (!isSlowed ? currentSpeed : currentSpeed / slowDivider);
+        if (isDashing) return;
 
-        if (Input.GetKeyDown(KeyCode.KeypadEnter))
-        {
-            isCarryingSoda = true;
-        }
+        movement = Input.GetAxisRaw("Horizontal") * (!isSlowed ? currentSpeed : currentSpeed / slowDivider);
 
         Jump();
         Dash();
@@ -92,21 +90,28 @@ public class Player : MonoBehaviour
 
     private void Dash()
     {
-        if (Input.GetButtonDown("Fire3") && isCarryingSoda)
+        if (isCarryingSoda && Input.GetButtonDown("Fire3"))
         {
-            currentBoostForce = boostForce;
             isCarryingSoda = false;
-            currentBoostForce = 0;
+            isDashing = true;
+            rb.linearVelocity = new(0, rb.linearVelocityY);
         }
     }
 
     private void OnDash()
     {
-        if (isCarryingSoda)
+        if (isDashing)
         {
-            Vector2 boostDirection = (transform.rotation.y == 0 ? Vector2.right : Vector2.left) * boostForce;
-            rb.AddForce(boostDirection, ForceMode2D.Impulse);
+            rb.AddForce((transform.rotation.y == 0 ? Vector2.right : Vector2.left) * boostForce,
+                ForceMode2D.Impulse);
+            StartCoroutine(DashTime(boostDuration));
         }
+    }
+
+    private IEnumerator DashTime(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        isDashing = false;
     }
 
     private void Jump()
@@ -214,6 +219,12 @@ public class Player : MonoBehaviour
         else if (collision.CompareTag("SugarPowerUp"))
         {
             StartCoroutine(ActivateSugar());
+
+            collision.gameObject.SetActive(false);
+        }
+        else if (collision.CompareTag("SodaPowerUp"))
+        {
+            isCarryingSoda = true;
 
             collision.gameObject.SetActive(false);
         }
