@@ -13,6 +13,10 @@ TagManager:
   - SodaPowerUp
   - VFXPoolManager
   - ItemDisplay
+  - Car
+  - Vehicle
+  - VehiclePoolManager
+  - VehicleLimit
   layers:
   - Default
   - TransparentFX
@@ -20,7 +24,7 @@ TagManager:
   - Ground
   - Water
   - UI
-  - 
+  - Platform
   - 
   - 
   - 

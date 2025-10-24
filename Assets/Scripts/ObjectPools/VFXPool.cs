@@ -41,7 +41,7 @@ public class VFXPool : MonoBehaviour
         {
             splash.transform.parent = parent;
             splash.transform.localPosition = Vector3.zero;
-            splash.transform.eulerAngles = new Vector3(0, 0, 90);
+            splash.transform.eulerAngles = new Vector3(0, parent.transform.parent.eulerAngles.y, 90);
             splash.SetActive(true);
             return splash;
         }

@@ -24,7 +24,7 @@ public class PlayerAnimatorManager : MonoBehaviour
         }
 
         anim.SetInteger("pMove", (int)player.GetMovement());
-        anim.SetBool("pGround", player.OnGround());
+        anim.SetBool("pGround", (player.OnGround() || player.OnPlatform()));
         anim.SetFloat("pAirSpeed", player.GetAirSpeed());
         anim.SetBool("pSlow", player.GetSlowed());
     }

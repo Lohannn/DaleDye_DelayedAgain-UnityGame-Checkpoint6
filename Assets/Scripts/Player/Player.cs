@@ -18,6 +18,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform groundSensor;
     [SerializeField] private Vector2 groundSensorSize;
     [SerializeField] private LayerMask GroundLayer;
+    [SerializeField] private LayerMask PlatformLayer;
     [SerializeField] private Color32 sensorColor;
 
     [Header("Power Up Settings")]
@@ -133,12 +134,12 @@ public class Player : MonoBehaviour
     #region Jump
     private void Jump()
     {
-        if (Input.GetButtonDown("Jump") && OnGround())
+        if (Input.GetButtonDown("Jump") && (OnGround() || OnPlatform()))
         {
             pam.Jump();
             currentJumpTime = maxJumpTime;
         }
-        else if (Input.GetButtonDown("Jump") && isCarryingSoda)
+        else if (Input.GetButtonDown("Jump") && isCarryingSoda && !OnGround() && !OnPlatform())
         {
             currentJumpTime = maxJumpTime;
             isCarryingSoda = false;
@@ -225,6 +226,11 @@ public class Player : MonoBehaviour
         return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, GroundLayer);
     }
 
+    public bool OnPlatform()
+    {
+        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, PlatformLayer);
+    }
+
     #endregion
 
     #region Power-Ups
@@ -275,6 +281,25 @@ public class Player : MonoBehaviour
     }
 
     #endregion
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Car"))
+        {
+            if (OnPlatform() && collision != null)
+            {
+                transform.SetParent(collision.transform);
+            }
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Car"))
+        {
+            transform.SetParent(null);
+        }
+    }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
