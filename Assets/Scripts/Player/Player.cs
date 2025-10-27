@@ -4,6 +4,8 @@ using UnityEngine.Animations;
 
 public class Player : MonoBehaviour
 {
+    public float LinearVelocityX;
+
     [Header("Player Settings")]
     [SerializeField] private float baseSpeed;
     private float currentSpeed;
@@ -13,6 +15,9 @@ public class Player : MonoBehaviour
     [SerializeField] private float maxJumpTime;
     private float currentJumpTime;
     private bool isSlowed;
+    private Vector2 respawnPoint = new Vector2(4.94f, 9.54f);
+    private bool isDead;
+    private int lifes = 3;
 
     [Header("Sensor Ground Settings")]
     [SerializeField] private Transform groundSensor;
@@ -52,6 +57,15 @@ public class Player : MonoBehaviour
         vfxpool = GameObject.FindGameObjectWithTag("VFXPoolManager").GetComponent<VFXPool>();
         itemDisplay = GameObject.FindGameObjectWithTag("ItemDisplay").GetComponent<ItemDisplay>();
 
+        if (transform.parent != null)
+        {
+            Rigidbody2D parentRb = transform.parent.GetComponent<Rigidbody2D>();
+            if (parentRb != null)
+            {
+                LinearVelocityX = parentRb.linearVelocity.x;
+            }
+        }
+
         currentSpeed = baseSpeed;
     }
 
@@ -72,7 +86,7 @@ public class Player : MonoBehaviour
     #region Player Controls
     private void PlayerInputs()
     {
-        if (isDashing) return;
+        if (isDashing || isDead) return;
 
         movement = Input.GetAxisRaw("Horizontal") * (!isSlowed ? currentSpeed : currentSpeed / slowDivider);
 
@@ -189,8 +203,44 @@ public class Player : MonoBehaviour
 
     #endregion
 
+    private IEnumerator DeathCoroutine()
+    {
+        if (lifes > 0)
+        {
+            lifes--;
+        }
+        else
+        {
+            lifes = 3;
+        }
+
+        isDead = true;
+        rb.gravityScale = 0;
+        movement = 0;
+        rb.linearVelocity = Vector2.zero;
+        col.enabled = false;
+
+        for (int i = 0; i < 10; i++)
+        {
+            sr.enabled = false;
+            yield return new WaitForSeconds(0.05f);
+            sr.enabled = true;
+            yield return new WaitForSeconds(0.05f);
+        }
+
+        transform.position = respawnPoint;
+        rb.gravityScale = 1;
+        isDead = false;
+        col.enabled = true;
+    }
+
     #region Getters
-    
+
+    public int GetLifes()
+    {
+        return lifes;
+    }
+
     public float GetBaseSpeed()
     {
         return baseSpeed;
@@ -223,12 +273,12 @@ public class Player : MonoBehaviour
 
     public bool OnGround()
     {
-        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, GroundLayer);
+        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, GroundLayer) && rb.linearVelocityY <= 0.1f;
     }
 
     public bool OnPlatform()
     {
-        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, PlatformLayer);
+        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, PlatformLayer) && rb.linearVelocityY <= 0.1f;
     }
 
     #endregion
@@ -323,6 +373,15 @@ public class Player : MonoBehaviour
         {
             currentItem = itemDisplay.DisplayItem("Soda");
 
+            collision.gameObject.SetActive(false);
+        }
+        else if (collision.CompareTag("Vehicle"))
+        {
+            StartCoroutine(DeathCoroutine());
+        }
+        else if (collision.CompareTag("Checkpoint"))
+        {
+            respawnPoint = collision.transform.position;
             collision.gameObject.SetActive(false);
         }
     }

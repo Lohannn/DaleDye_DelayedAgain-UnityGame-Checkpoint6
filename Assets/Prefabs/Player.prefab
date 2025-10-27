@@ -82,7 +82,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: 1813475953872923133, guid: b065aa26f0597094a8c1b37e5213a6a5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -213,15 +213,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 130a1aa778237ba4197bacb3fd6d8017, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LinearVelocityX: 0
   baseSpeed: 8
   slowDivider: 4
   jumpForce: 5.5
   maxJumpTime: 0.4
   groundSensor: {fileID: 8589818540409346070}
-  groundSensorSize: {x: 0.81, y: 0.04}
+  groundSensorSize: {x: 0.81, y: 0.1}
   GroundLayer:
     serializedVersion: 2
     m_Bits: 8
+  PlatformLayer:
+    serializedVersion: 2
+    m_Bits: 64
   sensorColor:
     serializedVersion: 2
     rgba: 4278208959

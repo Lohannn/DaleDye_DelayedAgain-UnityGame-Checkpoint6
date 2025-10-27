@@ -7,10 +7,12 @@ public class VehicleSpawner : MonoBehaviour
     [SerializeField] private float spawnInterval;
 
     private VehiclePool pool;
+    private PowerUpPool powerUpPool;
 
     private void Start()
     {
         pool = GameObject.Find("VehiclePoolManager").GetComponent<VehiclePool>();
+        powerUpPool = GameObject.Find("PowerUpPoolManager").GetComponent<PowerUpPool>();
 
         StartCoroutine(SpawnVehicleCoroutine());
     }
@@ -18,7 +20,11 @@ public class VehicleSpawner : MonoBehaviour
     private IEnumerator SpawnVehicleCoroutine()
     {
         yield return new WaitForSeconds(spawnInterval);
-        pool.GetRandomVehicle(transform.position.x);
+        GameObject vehicle = pool.GetRandomVehicle(transform.position.x);
+        if (Random.Range(0, 3) == 0)
+        {
+            powerUpPool.GetRandomPowerUp(vehicle.GetComponent<Car>().GetPowerUpPosition());
+        }
 
         StartCoroutine(SpawnVehicleCoroutine());
     }

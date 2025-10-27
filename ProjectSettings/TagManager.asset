@@ -17,6 +17,9 @@ TagManager:
   - Vehicle
   - VehiclePoolManager
   - VehicleLimit
+  - Sign
+  - Checkpoint
+  - PowerUpPosition
   layers:
   - Default
   - TransparentFX
