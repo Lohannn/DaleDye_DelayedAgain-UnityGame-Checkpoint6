@@ -1,11 +1,10 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Animations;
 
 public class Player : MonoBehaviour
 {
-    public float LinearVelocityY;
-
     [Header("Player Settings")]
     [SerializeField] private float baseSpeed;
     private float currentSpeed;
@@ -18,6 +17,9 @@ public class Player : MonoBehaviour
     private Vector2 respawnPoint = new Vector2(4.94f, 9.54f);
     private bool isDead;
     private int lifes = 3;
+    private bool startSceneStarted;
+    private bool onStartScene = true;
+    private Vector2 startSceneTarget = new Vector2(5, 9);
 
     [Header("Sensor Ground Settings")]
     [SerializeField] private Transform groundSensor;
@@ -47,6 +49,8 @@ public class Player : MonoBehaviour
     private PlayerAnimatorManager pam;
     private VFXPool vfxpool;
     private ItemDisplay itemDisplay;
+    private AnxietyTimer timer;
+    private MainCanvas mainCanvas;
 
     void Start()
     {
@@ -56,15 +60,39 @@ public class Player : MonoBehaviour
         pam = GetComponent<PlayerAnimatorManager>();
         vfxpool = GameObject.FindGameObjectWithTag("VFXPoolManager").GetComponent<VFXPool>();
         itemDisplay = GameObject.FindGameObjectWithTag("ItemDisplay").GetComponent<ItemDisplay>();
+        timer = GameObject.FindGameObjectWithTag("Timer").GetComponent<AnxietyTimer>();
+        mainCanvas = GameObject.FindGameObjectWithTag("MainCanvas").GetComponent<MainCanvas>();
         
-        
-
         currentSpeed = baseSpeed;
     }
 
     void Update()
     {
-        LinearVelocityY = rb.linearVelocityY;
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            startSceneStarted = true;
+            rb.linearVelocity = new Vector2(0, -1);
+        }
+
+        if (startSceneStarted)
+        {
+            if (onStartScene)
+            {
+                transform.position = Vector2.MoveTowards(transform.position, startSceneTarget, (baseSpeed * 2f) * Time.deltaTime);
+            }
+
+            if (onStartScene && !col.enabled && transform.position.x >= 0.5)
+            {
+                col.enabled = true;
+            }
+
+            if (onStartScene && Vector2.Distance(transform.position, startSceneTarget) <= 0.1f)
+            {
+                rb.gravityScale = 2;
+                onStartScene = false;
+                StartCoroutine(timer.StartTimer());
+            }
+        }
 
         PlayerInputs();
 
@@ -81,7 +109,7 @@ public class Player : MonoBehaviour
     #region Player Controls
     private void PlayerInputs()
     {
-        if (isDashing || isDead) return;
+        if (isDashing || isDead || onStartScene) return;
 
         movement = Input.GetAxisRaw("Horizontal") * (!isSlowed ? currentSpeed : currentSpeed / slowDivider);
 
@@ -204,12 +232,9 @@ public class Player : MonoBehaviour
         {
             lifes--;
         }
-        else
-        {
-            lifes = 3;
-        }
 
         isDead = true;
+        currentJumpTime = 0;
         rb.gravityScale = 0;
         movement = 0;
         rb.linearVelocity = Vector2.zero;
@@ -223,13 +248,25 @@ public class Player : MonoBehaviour
             yield return new WaitForSeconds(0.05f);
         }
 
-        transform.position = respawnPoint;
-        rb.gravityScale = 1;
-        isDead = false;
-        col.enabled = true;
+        if (lifes <= 0)
+        {
+            mainCanvas.StageLose();
+        }
+        else
+        {
+            transform.position = respawnPoint;
+            rb.gravityScale = 2;
+            isDead = false;
+            col.enabled = true;
+        }
     }
 
     #region Getters
+
+    public bool GetOnStartScene()
+    {
+        return onStartScene;
+    }
 
     public int GetLifes()
     {
@@ -249,6 +286,11 @@ public class Player : MonoBehaviour
     public float GetSugarMultiplier()
     {
         return sugarSpeedMultiplier;
+    }
+
+    public bool GetIsCarryingSoda()
+    {
+        return isCarryingSoda;
     }
 
     public float GetMovement()
@@ -289,7 +331,10 @@ public class Player : MonoBehaviour
 
             while (currentBeerTime > 0)
             {
-                currentBeerTime--;
+                if (Time.timeScale != 0)
+                {
+                    currentBeerTime--;
+                }
                 yield return new WaitForSecondsRealtime(1.0f);
             }
 
@@ -336,6 +381,13 @@ public class Player : MonoBehaviour
                 transform.SetParent(collision.transform);
             }
         }
+        else if (collision.gameObject.CompareTag("Sign"))
+        {
+            if (transform.parent != null && transform.parent.transform.CompareTag("Car"))
+            {
+                StartCoroutine(DeathCoroutine());
+            }
+        }
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -378,6 +430,10 @@ public class Player : MonoBehaviour
         {
             respawnPoint = collision.transform.position;
             collision.gameObject.SetActive(false);
+        }
+        else if (collision.CompareTag("Objective"))
+        {
+            mainCanvas.StageWin();
         }
     }
 

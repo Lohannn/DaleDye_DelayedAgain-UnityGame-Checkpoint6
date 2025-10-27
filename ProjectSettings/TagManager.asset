@@ -20,6 +20,11 @@ TagManager:
   - Sign
   - Checkpoint
   - PowerUpPosition
+  - Objective
+  - LosePanel
+  - WinPanel
+  - MainCanvas
+  - Timer
   layers:
   - Default
   - TransparentFX

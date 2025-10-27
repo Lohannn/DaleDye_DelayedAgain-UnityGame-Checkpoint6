@@ -123,7 +123,7 @@ BoxCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2548412805911066785}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
@@ -177,7 +177,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 6200000, guid: 47d08e5d3a8347443957a449ebdd8bc6, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
@@ -213,11 +213,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 130a1aa778237ba4197bacb3fd6d8017, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LinearVelocityX: 0
   baseSpeed: 8
-  slowDivider: 4
-  jumpForce: 5.5
-  maxJumpTime: 0.4
+  slowDivider: 2
+  jumpForce: 6
+  maxJumpTime: 0.55
   groundSensor: {fileID: 8589818540409346070}
   groundSensorSize: {x: 0.81, y: 0.1}
   GroundLayer:

@@ -6,6 +6,9 @@ public class AnxietyTimer : MonoBehaviour
 {
     [Header("Timer Settings")]
     [SerializeField] private float startMinutes;
+    [SerializeField] private float startSeconds;
+
+    private MainCanvas mainCanvas;
 
     private float minutes;
     private float seconds = 0;
@@ -13,9 +16,10 @@ public class AnxietyTimer : MonoBehaviour
 
     void Start()
     {
-        minutes = startMinutes;
+        mainCanvas = GameObject.FindGameObjectWithTag("MainCanvas").GetComponent<MainCanvas>();
 
-        StartCoroutine(StartTimer());
+        minutes = startMinutes;
+        seconds = startSeconds;
     }
 
     // Update is called once per frame
@@ -25,7 +29,7 @@ public class AnxietyTimer : MonoBehaviour
         transform.Find("TextTimer").GetComponent<Text>().text = string.Format("{0:00}:{1:00}.{2:00}", minutes, seconds, miliseconds);
     }
 
-    private IEnumerator StartTimer()
+    public IEnumerator StartTimer()
     {
         while (minutes > 0 || seconds > 0 || miliseconds > 0)
         {
@@ -53,6 +57,11 @@ public class AnxietyTimer : MonoBehaviour
             }
 
             yield return new WaitForSeconds(0.01f);
+        }
+
+        if (minutes == 0 && seconds == 0 && miliseconds == 0)
+        {
+            mainCanvas.StageLose();
         }
     }
 }
