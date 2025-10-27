@@ -4,7 +4,7 @@ using UnityEngine.Animations;
 
 public class Player : MonoBehaviour
 {
-    public float LinearVelocityX;
+    public float LinearVelocityY;
 
     [Header("Player Settings")]
     [SerializeField] private float baseSpeed;
@@ -56,21 +56,16 @@ public class Player : MonoBehaviour
         pam = GetComponent<PlayerAnimatorManager>();
         vfxpool = GameObject.FindGameObjectWithTag("VFXPoolManager").GetComponent<VFXPool>();
         itemDisplay = GameObject.FindGameObjectWithTag("ItemDisplay").GetComponent<ItemDisplay>();
-
-        if (transform.parent != null)
-        {
-            Rigidbody2D parentRb = transform.parent.GetComponent<Rigidbody2D>();
-            if (parentRb != null)
-            {
-                LinearVelocityX = parentRb.linearVelocity.x;
-            }
-        }
+        
+        
 
         currentSpeed = baseSpeed;
     }
 
     void Update()
     {
+        LinearVelocityY = rb.linearVelocityY;
+
         PlayerInputs();
 
         Look();
@@ -273,12 +268,12 @@ public class Player : MonoBehaviour
 
     public bool OnGround()
     {
-        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, GroundLayer) && rb.linearVelocityY <= 0.1f;
+        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, GroundLayer) && rb.linearVelocityY <= 0.1f && rb.linearVelocityY >= -0.1f;
     }
 
     public bool OnPlatform()
     {
-        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, PlatformLayer) && rb.linearVelocityY <= 0.1f;
+        return Physics2D.OverlapBox(groundSensor.position, groundSensorSize, 0, PlatformLayer) && rb.linearVelocityY <= 0.1f && rb.linearVelocityY >= -0.1f;
     }
 
     #endregion
