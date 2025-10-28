@@ -47,10 +47,12 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private Collider2D col;
     private PlayerAnimatorManager pam;
+    private PlayerAudioPlayer pap;
     private VFXPool vfxpool;
     private ItemDisplay itemDisplay;
     private AnxietyTimer timer;
     private MainCanvas mainCanvas;
+    private MusicPlayer musicPlayer;
 
     void Start()
     {
@@ -58,41 +60,22 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
         pam = GetComponent<PlayerAnimatorManager>();
+        pap = GetComponent<PlayerAudioPlayer>();
         vfxpool = GameObject.FindGameObjectWithTag("VFXPoolManager").GetComponent<VFXPool>();
         itemDisplay = GameObject.FindGameObjectWithTag("ItemDisplay").GetComponent<ItemDisplay>();
         timer = GameObject.FindGameObjectWithTag("Timer").GetComponent<AnxietyTimer>();
         mainCanvas = GameObject.FindGameObjectWithTag("MainCanvas").GetComponent<MainCanvas>();
-        
+        musicPlayer = GameObject.FindGameObjectWithTag("MusicManager").GetComponent<MusicPlayer>();
+
         currentSpeed = baseSpeed;
+
+        StartCoroutine(StartSceneCoroutine());
+        StartCoroutine(StartAlarmSound());
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            startSceneStarted = true;
-            rb.linearVelocity = new Vector2(0, -1);
-        }
-
-        if (startSceneStarted)
-        {
-            if (onStartScene)
-            {
-                transform.position = Vector2.MoveTowards(transform.position, startSceneTarget, (baseSpeed * 2f) * Time.deltaTime);
-            }
-
-            if (onStartScene && !col.enabled && transform.position.x >= 0.5)
-            {
-                col.enabled = true;
-            }
-
-            if (onStartScene && Vector2.Distance(transform.position, startSceneTarget) <= 0.1f)
-            {
-                rb.gravityScale = 2;
-                onStartScene = false;
-                StartCoroutine(timer.StartTimer());
-            }
-        }
+        StartSceneManagement();
 
         PlayerInputs();
 
@@ -174,10 +157,17 @@ public class Player : MonoBehaviour
         if (Input.GetButtonDown("Jump") && (OnGround() || OnPlatform()))
         {
             pam.Jump();
+
+            if (Random.Range(0, 5) < 4)
+            {
+                pap.PlaySound(pap.JUMP);
+            }
+
             currentJumpTime = maxJumpTime;
         }
         else if (Input.GetButtonDown("Jump") && isCarryingSoda && !OnGround() && !OnPlatform())
         {
+            pap.PlaySound(pap.JUMP);
             currentJumpTime = maxJumpTime;
             isCarryingSoda = false;
             SpawnSodaSplash(180);
@@ -214,6 +204,7 @@ public class Player : MonoBehaviour
                     StartCoroutine(ActivateSugar());
                     break;
                 case "Soda":
+                    pap.PlaySound(pap.USE_SODA);
                     isCarryingSoda = true;
                     break;
                 default:
@@ -325,6 +316,9 @@ public class Player : MonoBehaviour
     {
         if (currentBeerTime == 0)
         {
+            pap.PlaySound(pap.USE_BEER);
+            pap.SlowDownSound();
+            musicPlayer.SlowDownSound();
             currentBeerTime = timedPowerUpMaxTime;
 
             Time.timeScale = beerTimeScale;
@@ -338,6 +332,8 @@ public class Player : MonoBehaviour
                 yield return new WaitForSecondsRealtime(1.0f);
             }
 
+            pap.ResetSoundSpeed();
+            musicPlayer.ResetSoundSpeed();
             Time.timeScale = 1.0f;
         }
     }
@@ -346,6 +342,7 @@ public class Player : MonoBehaviour
     {
         if (currentSugarTime == 0)
         {
+            pap.PlaySound(pap.USE_SUGAR);
             currentSugarTime = timedPowerUpMaxTime;
 
             currentSpeed = baseSpeed * sugarSpeedMultiplier;
@@ -362,16 +359,65 @@ public class Player : MonoBehaviour
 
     private void SpawnSodaSplash(float rotation)
     {
+        pap.PlaySound(pap.USE_SODA_BOOST);
         vfxpool.GetPooledSodaSplash(sodaSplashPosition.position, rotation);
     }
 
     private void SpawnSodaSplash(Transform parent)
     {
+        pap.PlaySound(pap.USE_SODA_BOOST);
         vfxpool.GetPooledSodaSplash(parent);
     }
 
     #endregion
 
+    #region Start Scene
+    private IEnumerator StartSceneCoroutine()
+    {
+        yield return new WaitForSeconds(7.0f);
+        startSceneStarted = true;
+        rb.linearVelocity = new Vector2(0, -1);
+    }
+
+    private IEnumerator StartAlarmSound()
+    {
+        yield return new WaitForSeconds(3.0f);
+        pap.PlaySound(pap.ALARM);
+
+        StartCoroutine(StopAlarmSound());
+    }
+
+    private IEnumerator StopAlarmSound()
+    {
+        yield return new WaitForSeconds(4.0f);
+        pap.StopSound();
+    }
+
+    private void StartSceneManagement()
+    {
+        if (startSceneStarted)
+        {
+            if (onStartScene)
+            {
+                transform.position = Vector2.MoveTowards(transform.position, startSceneTarget, (baseSpeed * 2f) * Time.deltaTime);
+            }
+
+            if (onStartScene && !col.enabled && transform.position.x >= 0.5)
+            {
+                pap.PlaySound(pap.BREAK_GLASS);
+                musicPlayer.PlaySound(musicPlayer.STAGE);
+                col.enabled = true;
+            }
+
+            if (onStartScene && Vector2.Distance(transform.position, startSceneTarget) <= 0.1f)
+            {
+                rb.gravityScale = 2;
+                onStartScene = false;
+                StartCoroutine(timer.StartTimer());
+            }
+        }
+    }
+    #endregion
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Car"))
@@ -406,24 +452,28 @@ public class Player : MonoBehaviour
         } 
         else if (collision.CompareTag("BeerPowerUp"))
         {
+            pap.PlaySound(pap.PICK_ITEM);
             currentItem = itemDisplay.DisplayItem("Beer");
 
             collision.gameObject.SetActive(false);
         }
         else if (collision.CompareTag("SugarPowerUp"))
         {
+            pap.PlaySound(pap.PICK_ITEM);
             currentItem = itemDisplay.DisplayItem("Sugar");
 
             collision.gameObject.SetActive(false);
         }
         else if (collision.CompareTag("SodaPowerUp"))
         {
+            pap.PlaySound(pap.PICK_ITEM);
             currentItem = itemDisplay.DisplayItem("Soda");
 
             collision.gameObject.SetActive(false);
         }
         else if (collision.CompareTag("Vehicle"))
         {
+            pap.PlaySound(pap.DEATH);
             StartCoroutine(DeathCoroutine());
         }
         else if (collision.CompareTag("Checkpoint"))

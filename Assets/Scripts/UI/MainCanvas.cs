@@ -10,6 +10,12 @@ public class MainCanvas : MonoBehaviour
     [SerializeField] private GameObject pausePanel;
 
     private float currentTimeScale;
+    private StageAudioPlayer sap;
+
+    private void Start()
+    {
+        sap = GetComponent<StageAudioPlayer>();
+    }
 
     private void Update()
     {
@@ -34,12 +40,14 @@ public class MainCanvas : MonoBehaviour
 
     public void StageWin()
     {
+        sap.PlaySound(sap.WIN);
         winPanel.SetActive(true);
         Time.timeScale = 0;
     }
 
     public void StageLose()
     {
+        sap.PlaySound(sap.LOSE);
         losePanel.SetActive(true);
         Time.timeScale = 0;
     }

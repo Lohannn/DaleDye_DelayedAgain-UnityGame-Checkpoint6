@@ -25,6 +25,7 @@ TagManager:
   - WinPanel
   - MainCanvas
   - Timer
+  - MusicManager
   layers:
   - Default
   - TransparentFX
