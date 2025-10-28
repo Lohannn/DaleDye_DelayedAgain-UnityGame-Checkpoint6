@@ -431,6 +431,7 @@ public class Player : MonoBehaviour
         {
             if (transform.parent != null && transform.parent.transform.CompareTag("Car"))
             {
+                pap.PlaySound(pap.DEATH);
                 StartCoroutine(DeathCoroutine());
             }
         }
